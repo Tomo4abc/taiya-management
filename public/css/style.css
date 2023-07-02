@@ -1,0 +1,11 @@
+.container_height {
+    height: 100vh;
+}
+
+th, td {
+    border: 1px solid #000;
+}
+
+th {
+    background-color: #99FFFF;
+}
