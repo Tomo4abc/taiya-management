@@ -9,45 +9,46 @@
 <!-- 検索 -->
 <form action="{{ route('itemlist') }}" method="GET" class="d-flex p-2">
     {{ csrf_field() }}
-    
+
     <div class="col-auto">
         <input type="search" name="keyword" class="form-control me-2" aria-label="Search">
     </div>
     <div class="col-auto">
         <div class="ms-2"></div>
     </div>
+
     <div class="col-auto">
         <button type="submit" class="btn btn-secondary">
             {{ __('検索') }}
         </button>
     </div>
-<!-- 商品登録 -->
+    <!-- 商品登録 -->
     <div class="col-auto ms-auto">
         <a href="{{ route('item/create') }}" class="btn btn-secondary">
             {{ __('タイヤ登録') }}
         </a>
     </div>
 </form>
-<!-- ページネーション
-<nav aria-label="Page navigation example">
-  <ul class="pagination">
-    <li class="page-item"><a class="page-link" href="#">Previous</a></li>
-    <li class="page-item"><a class="page-link" href="#">1</a></li>
-    <li class="page-item"><a class="page-link" href="#">2</a></li>
-    <li class="page-item"><a class="page-link" href="#">3</a></li>
-    <li class="page-item"><a class="page-link" href="#">Next</a></li>
-  </ul>
-</nav> -->
+
 <!-- ページネーション-->
 <div class="mt-1 mb-1 row justify-content-center">
     {{ $items->links() }}
 </div>
 
+<!-- CSVファイル -->
+<!-- <form role="form" method="post" action="import" enctype="multipart/form-data">
+    {{ csrf_field() }}
+    <input type="file" name="csv_file" id="csv_file">
+    <div class="form-group">
+        <button type="submit" class="btn btn-default btn-success">保存</button>
+    </div>
+</form> -->
+
 <!-- 商品一覧 -->
 <table class="table">
     <thead>
         <tr class="table-success">
-            <th>ＩＤ</th>
+            <!-- <th>ＩＤ</th> -->
             <th>タイヤモデル</th>
             <th>サイズ</th>
             <th>本数</th>
@@ -61,15 +62,15 @@
             <th>強度数</th>
             <th>仕様</th>
             <th>ホイル</th>
-            <!-- <th>入庫日</th> 
-            <th>備考欄</th> -->
+            <th>入庫日</th>
+            <!-- <th>備考欄</th> -->
         </tr>
     </thead>
     <tbody>
-    @foreach ($items as $item)
+        @foreach ($items as $item)
         <tr>
-            <td><a href="/detail/{{ $item->id }}">{{ $item->id }}</a></td>
-            <td>{{ $item->tire_id }}</td>
+            <!-- <td>{{ $item->id }}</a></td> -->
+            <td><a href="/detail/{{ $item->id }}">{{ $item->tire_id }}</td>
             <td>{{ $item->size }}</td>
             <td>{{ $item->number }}</td>
             <td>{{ $item->tire_maker }}</td>
@@ -82,6 +83,7 @@
             <td>{{ $item->strength }}</td>
             <td>{{ $item->specification }}</td>
             <td>{{ $item->foil }}</td>
+            <td>{{ $item->created_at->format('Y年m月d日') }}</td>
         </tr>
         @endforeach
     </tbody>
