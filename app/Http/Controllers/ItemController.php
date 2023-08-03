@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 
 use App\Models\Item;
 use App\Models\Type;
+use Carbon\Carbon;
 
 class ItemController extends Controller
 {
@@ -34,16 +35,24 @@ class ItemController extends Controller
             $keyword = mb_convert_kana($keyword, 'KV');
         }
 
-        $query = Item::query()->with(['type']);
-                // ->select('items.tire_maker', 'items.tire_id', 'types.type_name',);
-
+        // $query = Item::query()->with(['type']);
+        $query = Item::query()->leftjoin('types','items.type_id','=','types.id')
+                ->select('items.*');
+        
         if (!empty($keyword)) {
             $query->where(function ($query) use ($keyword) {
-                $query->where('tire_maker', 'LIKE', '%'.$keyword.'%');
-                    // ->orwhere('type', 'LIKE', '%'.$keyword.'%')
-                    // ->orwhere('tire_id', 'LIKE', '%'.$keyword.'%');
+                
+                $query->where('tire_maker', 'LIKE', '%'.$keyword.'%')
+                    ->orwhere('inch', 'LIKE', '%'.$keyword.'%')
+                    // タイヤタイプの検索
+                    ->orwhere('types.type_name', 'LIKE', '%'.$keyword.'%')
+                    ->orwhere('size', 'LIKE', '%'.$keyword.'%');
             });
         }
+        /**types_listの変数の定義 */
+        // $types_list = Type::all();
+        // dd($query->toSql(), $query->getBindings(),$keyword);
+        /** ページネーション */ 
         $items = $query->paginate(10);
         return view('items.itemlist', ['items' => $items]);
     }
@@ -107,9 +116,9 @@ class ItemController extends Controller
             // 'detail' => 'nullable|max:500',
             'tire_id' => 'nullable|max:500',
             'size' => 'required|numeric|max:500',
-            'number' => 'required|max:100',
+            'number' => 'required|numeric|max:100',
             'tire_maker' => 'required|max:100',
-            'inch' => 'required|max:100',
+            'inch' => 'required|numeric|max:100',
             'year' => 'required|digits:4|integer|max:2500|min:2000',
             'oblateness' => 'nullable|max:500',
             'ditch' => 'nullable|max:500',
@@ -119,6 +128,7 @@ class ItemController extends Controller
             'specification' => 'nullable|max:500',
             'foil' => 'nullable|max:500',
             'detail' => 'nullable|max:500',
+
         ]);
         // dd($request->all());
 
@@ -152,6 +162,8 @@ class ItemController extends Controller
             'foil' => $request->foil,
             'image' => $encoded_img,
             'mime' => $extension,
+            // 登録日を取得
+            'created_at' => (new Carbon($request->created_at))->toDateTimeString(),
         ]);
 
         return redirect('/itemlist');
