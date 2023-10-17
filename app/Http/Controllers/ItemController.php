@@ -5,10 +5,13 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Illuminate\Support\CSV;
 
 use App\Models\Item;
 use App\Models\Type;
 use Carbon\Carbon;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ItemController extends Controller
 {
@@ -34,27 +37,38 @@ class ItemController extends Controller
         if ($keyword !== null) {
             $keyword = mb_convert_kana($keyword, 'KV');
         }
+        $typeId = $request->input('type'); // Get the selected 'type'
+        $minSize = $request->input('min_size'); // Minimum size
+        $maxSize = $request->input('max_size'); // Maximum size
 
         // $query = Item::query()->with(['type']);
-        $query = Item::query()->leftjoin('types','items.type_id','=','types.id')
-                ->select('items.*');
-        
+        $query = Item::query()->leftjoin('types', 'items.type_id', '=', 'types.id')
+            ->select('items.*');
+
         if (!empty($keyword)) {
             $query->where(function ($query) use ($keyword) {
-                
-                $query->where('tire_maker', 'LIKE', '%'.$keyword.'%')
-                    ->orwhere('inch', 'LIKE', '%'.$keyword.'%')
+
+                $query->where('tire_maker', 'LIKE', '%' . $keyword . '%')
+                    ->orwhere('inch', 'LIKE', '%' . $keyword . '%')
                     // タイヤタイプの検索
-                    ->orwhere('types.type_name', 'LIKE', '%'.$keyword.'%')
-                    ->orwhere('size', 'LIKE', '%'.$keyword.'%');
+                    ->orwhere('types.type_name', 'LIKE', '%' . $keyword . '%')
+                    ->orwhere('size', 'LIKE', '%' . $keyword . '%')
+                    ->orwhere('tire_id', 'LIKE', '%' . $keyword . '%');
             });
         }
-        /**types_listの変数の定義 */
-        // $types_list = Type::all();
-        // dd($query->toSql(), $query->getBindings(),$keyword);
-        /** ページネーション */ 
-        $items = $query->paginate(10);
-        return view('items.itemlist', ['items' => $items]);
+
+        if (!empty($typeId)) {
+            $query->where('items.type_id', $typeId); // Filter by selected 'type'
+        }
+
+        if (!empty($minSize) && !empty($maxSize)) {
+            $query->whereRaw('CAST(size AS SIGNED) BETWEEN ? AND ?', [$minSize, $maxSize]);
+        }
+
+        $types = Type::orderBy('type_name')->get();
+        /** ページネーション */
+        $items = $query->paginate(15);
+        return view('items.itemlist', ['items' => $items, 'types' => $types]);
     }
 
     public function detail($id)
@@ -63,8 +77,41 @@ class ItemController extends Controller
         // dd($item);
         $types = Type::orderBy('id')->get();
         // dd($types);
-        return view('items.detail', ['item' => $item,'types' =>$types]);
+        return view('items.detail', ['item' => $item, 'types' => $types]);
     }
+
+
+    /**
+     * CSVファイル 
+     * 
+     * 
+     * 
+     */
+    public function exportCsv()
+    {
+        $items = Item::all(); // Retrieve the data to export
+        $csvFileName = 'itemlist_export_' . Str::random(10) . '.csv';
+
+        return response()->stream(function () use ($items) {
+            $handle = fopen('php://output', 'w');
+
+            fputcsv($handle, [
+                'ID', 'Tire Maker', 'Inch', 'Type', 'Size', 'Tire ID',
+            ]);
+
+            foreach ($items as $item) {
+                fputcsv($handle, [
+                    $item->id, $item->tire_maker, $item->inch, $item->type->type_name, $item->size, $item->tire_id,
+                ]);
+            }
+
+            fclose($handle);
+        }, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $csvFileName . '"',
+        ]);
+    }
+
     public function update(Request $request)
     {
         $item = Item::find($request->id);
@@ -89,11 +136,11 @@ class ItemController extends Controller
         $item->foil = $request->foil;
         //画像がある場合は、encoded_imageを用意する
         // dd($request->file('image'));
-        if($request->file('image')){
+        if ($request->file('image')) {
             $file = file_get_contents($request->file('image'));
             $encoded_img = base64_encode($file);
             //ある時は上書き、ない時そのまま。
-            $item->image=$encoded_img;
+            $item->image = $encoded_img;
             //以下のmimeが必要ない。。。？
             // $extension = pathinfo($file, PATHINFO_EXTENSION);
             // $item->mime = $extension;
@@ -136,10 +183,10 @@ class ItemController extends Controller
         $encoded_img = null;
         $extension = null;
         //画像がある場合は、encoded_imageを用意する
-        if($request->image){
-        $file = file_get_contents($request->image);
-        $encoded_img = base64_encode($file);
-        $extension = $request->image->getClientOriginalExtension();
+        if ($request->image) {
+            $file = file_get_contents($request->image);
+            $encoded_img = base64_encode($file);
+            $extension = $request->image->getClientOriginalExtension();
         }
 
         // 商品登録
@@ -168,7 +215,6 @@ class ItemController extends Controller
 
         return redirect('/itemlist');
     }
-
     /**
      * 種別の取得
      * 
@@ -179,4 +225,27 @@ class ItemController extends Controller
         $types = Type::all();
         return view('items.create', ['types' => $types]);
     }
+
+    public function destroy($id)
+    {
+        Item::destroy($id);
+        return redirect('/itemlist');
+    }
+
+    /**
+     * 削除処理 2023/08/08
+     * 
+     * 
+     */
+    // public function destroy(Request $request, Item $item)
+    // {
+    //     //Itemテーブルから指定のIDのレコード1件を取得
+    //     $item = Item::find($request->id);
+    //     // dd(Item::find($request->id));
+    //     //レコードを削除
+    //     $item->delete();
+
+    //     //削除後一覧画面にリダイレクト
+    //     return redirect()->route('itemlist');
+    // }
 }

@@ -20,6 +20,11 @@
     <!-- Styles -->
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
     <link href="{{ asset('css/style.css') }}" rel="stylesheet">
+
+    <!-- DataTables -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+    <script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    
 </head>
 
 <body>
@@ -32,7 +37,10 @@
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="{{ __('Toggle navigation') }}">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-
+                <!-- Navbar設置 -->
+                <div class="col-1 p-4 text-center">
+                    <a href="/itemlist" class="link-dark text-decoration-none">在庫一覧</a>
+                </div>
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     <!-- Left Side Of Navbar -->
                     <ul class="navbar-nav me-auto">
@@ -80,20 +88,12 @@
         <main class="py-0">
             <div class="container_height">
                 <div class="row align-items-start">
-                    <div class="col-1 p-4 text-center">
-                        <!-- <p>タイヤ管理システム</p> -->
-                        <a href="/itemlist" class="link-dark text-decoration-none">在庫一覧</a>
-                    </div>
-
-                    <div class="col-11 card p-3 mt-3">
+                    <div class="col-12 card p-3 mt-3">
                         @yield('content')
                     </div>
                 </div>
             </div>
-
-
         </main>
     </div>
 </body>
-
 </html>

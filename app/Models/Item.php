@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Kyslik\ColumnSortable\Sortable;//追記9月26日
 
 class Item extends Model
 {
@@ -26,6 +27,8 @@ class Item extends Model
         'image',
     ];
 
+	public $sortable = ['tire_id','size','number'];//追記(ソートに使うカラムを指定)
+    
     /**
      * 種別の取得
      */
@@ -33,4 +36,5 @@ class Item extends Model
     {
         return $this->belongsTo(Type::class,'type_id');
     }
+
 }
