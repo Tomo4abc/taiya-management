@@ -25,5 +25,9 @@ Route::get('/item/create', [App\Http\Controllers\ItemController::class, 'create'
 Route::post('/item', [App\Http\Controllers\ItemController::class, 'store'])->name('item');
 Route::get('/detail/{id}', [App\Http\Controllers\ItemController::class, 'detail'])->name('detail');
 Route::post('/update/{id}', [App\Http\Controllers\ItemController::class, 'update'])->name('update');
+Route::delete('/item/{id}', [App\Http\Controllers\ItemController::class, 'destroy'])->name('destroy');
+Route::get('/itemlist/export-csv', [App\Http\Controllers\ItemController::class, 'exportCsv'])->name('itemlist.export-csv');
+
+//Route::get('/destroy', [App\Http\Controllers\ItemController::class, 'destroy'])->name('destroy'); Update前
 // Route::get('/itemlist', [App\Http\Controllers\ItemController::class, 'itemlist'])->name('itemlist');
 
